@@ -2,6 +2,10 @@ export function loadLevel(scene, level) {
   const { width, height } = level.world;
 
   scene.physics.world.setBounds(0, 0, width, height);
+  scene.physics.world.checkCollision.left = true;
+  scene.physics.world.checkCollision.right = true;
+  scene.physics.world.checkCollision.up = true;
+  scene.physics.world.checkCollision.down = false;
   scene.cameras.main.setBounds(0, 0, width, height);
 
   scene.add
@@ -21,13 +25,13 @@ export function loadLevel(scene, level) {
   });
 
   const ingredients = scene.physics.add.group({ allowGravity: false, immovable: true });
-  level.ingredients.forEach((ingredientData) => {
+  (level.ingredients ?? []).forEach((ingredientData) => {
     const ingredient = ingredients.create(ingredientData.x, ingredientData.y, 'ingredient');
     ingredient.setData('id', ingredientData.id);
     ingredient.setData('name', ingredientData.name);
     ingredient.setDepth(8);
     ingredient.setCircle(15);
-    ingredient.setAllowGravity(false);
+    ingredient.body.allowGravity = false;
 
     scene.tweens.add({
       targets: ingredient,
@@ -38,6 +42,50 @@ export function loadLevel(scene, level) {
       repeat: -1,
     });
   });
+
+  const checkpoints = scene.physics.add.staticGroup();
+  (level.checkpoints ?? []).forEach((checkpointData) => {
+    const checkpoint = checkpoints.create(checkpointData.x, checkpointData.y, 'checkpoint');
+    checkpoint.setData('id', checkpointData.id);
+    checkpoint.setData('respawn', checkpointData.respawn);
+    checkpoint.setDepth(6);
+    checkpoint.setTint(0x9c83ff);
+    checkpoint.refreshBody();
+  });
+
+  const hazards = scene.physics.add.staticGroup();
+  (level.hazards ?? []).forEach((hazardData) => {
+    const hazard = hazards.create(hazardData.x, hazardData.y, 'hazard');
+    hazard.setData('id', hazardData.id);
+    hazard.setData('name', hazardData.name);
+    hazard.setDisplaySize(hazardData.width, hazardData.height);
+    hazard.setDepth(5);
+    hazard.refreshBody();
+  });
+
+  let portal = null;
+  if (level.exit) {
+    const portalSprite = scene.physics.add.staticSprite(level.exit.x, level.exit.y, 'portal');
+    portalSprite.setData('id', level.exit.id);
+    portalSprite.setData('requiresIngredientIds', level.exit.requiresIngredientIds ?? []);
+    portalSprite.setDepth(6);
+    portalSprite.setAlpha(0.68);
+    portalSprite.setTint(0x7c5bff);
+    portalSprite.refreshBody();
+
+    const label = scene.add
+      .text(level.exit.x, level.exit.y - 70, 'Exit Portal', {
+        fontFamily: 'Verdana, Arial, sans-serif',
+        fontSize: '15px',
+        color: '#e7dcff',
+        stroke: '#201047',
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5)
+      .setDepth(9);
+
+    portal = { sprite: portalSprite, label };
+  }
 
   const npcSprite = scene.physics.add.staticSprite(level.npc.x, level.npc.y, 'npc');
   npcSprite.setDepth(7);
@@ -58,6 +106,9 @@ export function loadLevel(scene, level) {
   return {
     platforms,
     ingredients,
+    checkpoints,
+    hazards,
+    portal,
     npc: {
       sprite: npcSprite,
       nameText: npcName,

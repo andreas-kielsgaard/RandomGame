@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import './styles.css';
 import BootScene from './scenes/BootScene.js';
+import ComingSoonScene from './scenes/ComingSoonScene.js';
 import GameScene from './scenes/GameScene.js';
 
 const config = {
@@ -20,7 +21,7 @@ const config = {
       debug: false,
     },
   },
-  scene: [BootScene, GameScene],
+  scene: [BootScene, GameScene, ComingSoonScene],
 };
 
 new Phaser.Game(config);

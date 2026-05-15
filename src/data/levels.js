@@ -5,6 +5,7 @@ export const levels = [
     status: 'playable',
     world: { width: 2400, height: 720 },
     playerStart: { x: 130, y: 560 },
+    objective: 'Bring Chef Zynth the Quantum Pickle Shard, then dive through the portal.',
     platforms: [
       { x: 470, y: 684, width: 940, height: 72 },
       { x: 940, y: 548, width: 300, height: 34 },
@@ -21,6 +22,31 @@ export const levels = [
         y: 394,
       },
     ],
+    checkpoints: [
+      {
+        id: 'pickle-pulse-marker',
+        x: 940,
+        y: 492,
+        respawn: { x: 940, y: 482 },
+      },
+    ],
+    hazards: [
+      {
+        id: 'void-syrup-puddle',
+        name: 'Void Syrup',
+        x: 672,
+        y: 628,
+        width: 188,
+        height: 38,
+      },
+    ],
+    exit: {
+      id: 'soup-singularity-gate',
+      x: 2260,
+      y: 572,
+      requiresIngredientIds: ['quantum-pickle-shard'],
+      lockedMessage: 'Chef Zynth still needs the Quantum Pickle Shard before this portal trusts you.',
+    },
     npc: {
       name: 'Chef Zynth',
       x: 420,
@@ -66,4 +92,14 @@ export function getLevelById(id) {
   }
 
   return level;
+}
+
+export function getNextLevel(currentLevelId) {
+  const currentIndex = levels.findIndex((candidate) => candidate.id === currentLevelId);
+
+  if (currentIndex < 0 || currentIndex >= levels.length - 1) {
+    return null;
+  }
+
+  return levels[currentIndex + 1];
 }

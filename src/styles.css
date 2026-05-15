@@ -58,6 +58,7 @@ body {
   box-shadow: 0 0 30px rgba(255, 79, 216, 0.18);
   pointer-events: none;
   text-align: center;
+  animation: intro-fade 4.2s ease forwards;
 }
 
 #intro-overlay span {
@@ -80,5 +81,17 @@ body {
   #intro-overlay {
     top: 10px;
     padding: 8px 12px 10px;
+  }
+}
+
+@keyframes intro-fade {
+  0%,
+  68% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    visibility: hidden;
   }
 }

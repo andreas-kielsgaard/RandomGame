@@ -5,6 +5,9 @@ const textureKeys = [
   'platform',
   'ingredient',
   'npc',
+  'checkpoint',
+  'hazard',
+  'portal',
 ];
 
 export function createGeneratedTextures(scene) {
@@ -18,6 +21,9 @@ export function createGeneratedTextures(scene) {
   createCanvasTexture(scene, 'platform', 96, 28, drawPlatform);
   createCanvasTexture(scene, 'ingredient', 36, 36, drawIngredient);
   createCanvasTexture(scene, 'npc', 58, 76, drawNpc);
+  createCanvasTexture(scene, 'checkpoint', 48, 70, drawCheckpoint);
+  createCanvasTexture(scene, 'hazard', 96, 32, drawHazard);
+  createCanvasTexture(scene, 'portal', 74, 106, drawPortal);
 }
 
 function createCanvasTexture(scene, key, width, height, draw) {
@@ -199,6 +205,102 @@ function drawNpc(context) {
   context.fillStyle = '#fff7db';
   context.fillRect(17, 66, 8, 8);
   context.fillRect(34, 66, 8, 8);
+}
+
+function drawCheckpoint(context, width, height) {
+  context.shadowColor = '#98fff2';
+  context.shadowBlur = 15;
+  context.strokeStyle = '#98fff2';
+  context.lineWidth = 5;
+  context.beginPath();
+  context.moveTo(width / 2, height - 5);
+  context.lineTo(width / 2, 12);
+  context.stroke();
+
+  context.fillStyle = '#201047';
+  context.beginPath();
+  context.arc(width / 2, 13, 9, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = '#ffe66d';
+  context.beginPath();
+  context.moveTo(width / 2, 5);
+  context.lineTo(width - 8, 21);
+  context.lineTo(width / 2, 37);
+  context.lineTo(8, 21);
+  context.closePath();
+  context.fill();
+
+  context.shadowBlur = 0;
+  context.strokeStyle = '#ff4fd8';
+  context.lineWidth = 3;
+  context.beginPath();
+  context.arc(width / 2, 21, 17, 0.2, Math.PI * 1.75);
+  context.stroke();
+}
+
+function drawHazard(context, width, height) {
+  const syrup = context.createLinearGradient(0, 0, width, height);
+  syrup.addColorStop(0, '#ff4fd8');
+  syrup.addColorStop(0.52, '#6f2bff');
+  syrup.addColorStop(1, '#13001f');
+
+  context.shadowColor = '#ff4fd8';
+  context.shadowBlur = 16;
+  context.fillStyle = syrup;
+  roundedRect(context, 2, 7, width - 4, height - 10, 10);
+  context.fill();
+
+  context.shadowBlur = 0;
+  context.fillStyle = 'rgba(255, 247, 219, 0.8)';
+  for (let index = 0; index < 6; index += 1) {
+    const x = 11 + index * 15;
+    const y = 10 + (index % 2) * 5;
+    context.beginPath();
+    context.arc(x, y, 2.2, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  context.strokeStyle = '#98fff2';
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(7, 20);
+  context.bezierCurveTo(24, 8, 36, 31, 52, 19);
+  context.bezierCurveTo(68, 8, 76, 29, 90, 17);
+  context.stroke();
+}
+
+function drawPortal(context, width, height) {
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const ring = context.createRadialGradient(centerX, centerY, 5, centerX, centerY, 44);
+  ring.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+  ring.addColorStop(0.35, 'rgba(152, 255, 242, 0.74)');
+  ring.addColorStop(0.63, 'rgba(255, 79, 216, 0.74)');
+  ring.addColorStop(1, 'rgba(42, 12, 82, 0)');
+
+  context.shadowColor = '#98fff2';
+  context.shadowBlur = 18;
+  context.fillStyle = ring;
+  context.fillRect(0, 0, width, height);
+
+  context.shadowBlur = 0;
+  context.strokeStyle = '#ffe66d';
+  context.lineWidth = 5;
+  context.beginPath();
+  context.ellipse(centerX, centerY, 23, 39, 0.08, 0, Math.PI * 2);
+  context.stroke();
+
+  context.strokeStyle = '#ff4fd8';
+  context.lineWidth = 3;
+  context.beginPath();
+  context.ellipse(centerX, centerY, 14, 29, -0.18, 0, Math.PI * 2);
+  context.stroke();
+
+  context.fillStyle = '#201047';
+  context.beginPath();
+  context.ellipse(centerX, centerY, 10, 24, 0, 0, Math.PI * 2);
+  context.fill();
 }
 
 function roundedRect(context, x, y, width, height, radius) {

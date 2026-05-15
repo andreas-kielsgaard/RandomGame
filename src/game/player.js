@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 
-const MAX_RUN_SPEED = 300;
-const GROUND_ACCELERATION = 2200;
-const AIR_ACCELERATION = 1500;
-const GROUND_DRAG = 2600;
-const AIR_DRAG = 180;
-const JUMP_VELOCITY = -590;
-const JUMP_CUT_VELOCITY = -210;
+const MAX_RUN_SPEED = 326;
+const GROUND_ACCELERATION = 2500;
+const AIR_ACCELERATION = 1600;
+const GROUND_DRAG = 3100;
+const AIR_DRAG = 160;
+const JUMP_VELOCITY = -610;
+const JUMP_CUT_VELOCITY = -230;
 const COYOTE_TIME_MS = 105;
 const JUMP_BUFFER_MS = 120;
 
@@ -31,6 +31,7 @@ export function createPlayer(scene, start) {
     coyoteTimer: 0,
     jumpBufferTimer: 0,
     jumpHeldLastFrame: false,
+    isGroundedLastFrame: false,
   };
 }
 
@@ -38,6 +39,7 @@ export function updatePlayerController(scene, controller, delta) {
   const { sprite, cursors, keys } = controller;
   const body = sprite.body;
   const isGrounded = body.blocked.down || body.touching.down;
+  const landed = isGrounded && !controller.isGroundedLastFrame && body.velocity.y >= 0;
   const leftDown = cursors.left.isDown || keys.left.isDown;
   const rightDown = cursors.right.isDown || keys.right.isDown;
   const jumpHeld = cursors.up.isDown || cursors.space.isDown || keys.up.isDown || keys.jump.isDown;
@@ -64,10 +66,12 @@ export function updatePlayerController(scene, controller, delta) {
     sprite.setFlipX(direction < 0);
   }
 
+  let jumped = false;
   if (controller.jumpBufferTimer > 0 && controller.coyoteTimer > 0) {
     sprite.setVelocityY(JUMP_VELOCITY);
     controller.jumpBufferTimer = 0;
     controller.coyoteTimer = 0;
+    jumped = true;
   }
 
   if (!jumpHeld && controller.jumpHeldLastFrame && body.velocity.y < JUMP_CUT_VELOCITY) {
@@ -75,4 +79,16 @@ export function updatePlayerController(scene, controller, delta) {
   }
 
   controller.jumpHeldLastFrame = jumpHeld;
+  controller.isGroundedLastFrame = isGrounded;
+
+  return { jumped, landed, isGrounded };
+}
+
+export function resetPlayerController(controller) {
+  controller.sprite.setAcceleration(0);
+  controller.sprite.setVelocity(0, 0);
+  controller.coyoteTimer = 0;
+  controller.jumpBufferTimer = 0;
+  controller.jumpHeldLastFrame = false;
+  controller.isGroundedLastFrame = false;
 }
