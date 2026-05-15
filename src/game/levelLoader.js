@@ -77,7 +77,14 @@ export function loadLevel(scene, level) {
 
   const gravityFields = createGravityFields(scene, level.gravityFields ?? []);
   const bouncePads = createBouncePads(scene, level.bouncePads ?? []);
-  const marketStalls = createMarketStalls(scene, level.marketStalls ?? []);
+  const passiveSigns = [
+    ...(level.marketStalls ?? []),
+    ...(level.supportTerminals ?? []).map((terminal) => ({
+      ...terminal,
+      textureKey: 'support-terminal',
+    })),
+  ];
+  const marketStalls = createMarketStalls(scene, passiveSigns);
 
   let portal = null;
   if (level.exit) {

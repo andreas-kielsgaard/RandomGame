@@ -87,7 +87,7 @@ export function createGameUi(scene, level, totalIngredients) {
         'Mechanics',
         'Gravity Parole Fields soften gravity and improve air control.',
         'Bounce pads launch you automatically.',
-        'Market stalls display questionable wisdom when you stand nearby.',
+        'Market stalls and support terminals display questionable wisdom when you stand nearby.',
         '',
         'Quest',
         'Collect each impossible ingredient, then activate the portal.',

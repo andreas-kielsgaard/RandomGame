@@ -11,6 +11,8 @@ const textureKeys = [
   'gravity-field',
   'bounce-pad',
   'market-stall',
+  'support-terminal',
+  'cosmic-fax-machine',
 ];
 
 export function createGeneratedTextures(scene) {
@@ -30,6 +32,8 @@ export function createGeneratedTextures(scene) {
   createCanvasTexture(scene, 'gravity-field', 64, 64, drawGravityField);
   createCanvasTexture(scene, 'bounce-pad', 96, 28, drawBouncePad);
   createCanvasTexture(scene, 'market-stall', 92, 76, drawMarketStall);
+  createCanvasTexture(scene, 'support-terminal', 84, 78, drawSupportTerminal);
+  createCanvasTexture(scene, 'cosmic-fax-machine', 220, 150, drawCosmicFaxMachine);
 }
 
 function createCanvasTexture(scene, key, width, height, draw) {
@@ -393,6 +397,116 @@ function drawMarketStall(context, width, height) {
   context.fillRect(19, 46, 12, 10);
   context.fillRect(39, 44, 13, 12);
   context.fillRect(60, 47, 10, 9);
+}
+
+function drawSupportTerminal(context, width, height) {
+  context.shadowColor = '#98fff2';
+  context.shadowBlur = 13;
+  const body = context.createLinearGradient(0, 0, width, height);
+  body.addColorStop(0, '#98fff2');
+  body.addColorStop(0.46, '#7a2cff');
+  body.addColorStop(1, '#201047');
+  context.fillStyle = body;
+  roundedRect(context, 13, 8, width - 26, height - 16, 9);
+  context.fill();
+
+  context.shadowBlur = 0;
+  context.fillStyle = '#120925';
+  roundedRect(context, 20, 15, width - 40, 31, 6);
+  context.fill();
+
+  context.strokeStyle = '#ffe66d';
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(26, 25);
+  context.lineTo(width - 26, 25);
+  context.moveTo(26, 34);
+  context.lineTo(width - 35, 34);
+  context.stroke();
+
+  context.fillStyle = '#ff78dc';
+  context.beginPath();
+  context.arc(width / 2, 58, 5, 0, Math.PI * 2);
+  context.fill();
+
+  context.strokeStyle = '#fff7db';
+  context.lineWidth = 3;
+  context.beginPath();
+  context.moveTo(width / 2, 8);
+  context.lineTo(width / 2, 0);
+  context.moveTo(width / 2, 0);
+  context.lineTo(width / 2 - 8, 7);
+  context.moveTo(width / 2, 0);
+  context.lineTo(width / 2 + 8, 7);
+  context.stroke();
+}
+
+function drawCosmicFaxMachine(context, width, height) {
+  context.shadowColor = '#98fff2';
+  context.shadowBlur = 18;
+  const base = context.createLinearGradient(0, 24, width, height);
+  base.addColorStop(0, '#98fff2');
+  base.addColorStop(0.38, '#ff78dc');
+  base.addColorStop(0.7, '#7a2cff');
+  base.addColorStop(1, '#201047');
+  context.fillStyle = base;
+  roundedRect(context, 35, 50, 150, 72, 12);
+  context.fill();
+
+  context.shadowBlur = 0;
+  context.fillStyle = '#120925';
+  roundedRect(context, 50, 63, 68, 25, 7);
+  context.fill();
+
+  context.fillStyle = '#fff7db';
+  roundedRect(context, 128, 58, 43, 52, 6);
+  context.fill();
+
+  context.strokeStyle = '#201047';
+  context.lineWidth = 2;
+  for (let y = 67; y < 103; y += 9) {
+    context.beginPath();
+    context.moveTo(136, y);
+    context.lineTo(164, y);
+    context.stroke();
+  }
+
+  context.fillStyle = '#ffe66d';
+  context.beginPath();
+  context.arc(66, 76, 5, 0, Math.PI * 2);
+  context.arc(84, 76, 5, 0, Math.PI * 2);
+  context.fill();
+
+  context.strokeStyle = '#fff7db';
+  context.lineWidth = 4;
+  context.beginPath();
+  context.moveTo(62, 50);
+  context.lineTo(38, 18);
+  context.moveTo(150, 50);
+  context.lineTo(179, 19);
+  context.stroke();
+
+  context.fillStyle = '#ff78dc';
+  context.beginPath();
+  context.arc(38, 18, 8, 0, Math.PI * 2);
+  context.arc(179, 19, 8, 0, Math.PI * 2);
+  context.fill();
+
+  const moduleColors = ['#aafff5', '#ffe66d', '#2c133f', '#ffae35', '#fff7db'];
+  moduleColors.forEach((color, index) => {
+    context.fillStyle = color;
+    roundedRect(context, 44 + index * 25, 111, 17, 18, 4);
+    context.fill();
+  });
+
+  context.strokeStyle = '#ffe66d';
+  context.lineWidth = 3;
+  roundedRect(context, 35, 50, 150, 72, 12);
+  context.stroke();
+
+  context.fillStyle = '#98fff2';
+  context.font = 'bold 13px Verdana, Arial, sans-serif';
+  context.fillText('FAX', 65, 37);
 }
 
 function roundedRect(context, x, y, width, height, radius) {

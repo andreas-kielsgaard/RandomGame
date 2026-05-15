@@ -3,7 +3,7 @@ const STALL_READ_DISTANCE = 132;
 export function createMarketStalls(scene, stallData = []) {
   const stalls = stallData.map((data) => {
     const sprite = scene.add
-      .image(data.x, data.y, 'market-stall')
+      .image(data.x, data.y, data.textureKey ?? 'market-stall')
       .setTint(data.tint ?? 0xffe66d)
       .setDepth(5);
 

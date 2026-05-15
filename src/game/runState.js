@@ -13,6 +13,12 @@ export function getRunState(scene) {
   return state;
 }
 
+export function resetRunState(scene) {
+  const state = createInitialRunState();
+  scene.registry.set(RUN_STATE_KEY, state);
+  return state;
+}
+
 export function recordIngredient(scene, level, ingredientData) {
   const state = getRunState(scene);
 

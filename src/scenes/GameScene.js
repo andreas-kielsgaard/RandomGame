@@ -278,13 +278,7 @@ export default class GameScene extends Phaser.Scene {
     const nextLevel = getNextLevel(this.level.id);
     this.time.delayedCall(1300, () => {
       if (!nextLevel) {
-        this.scene.start('ComingSoonScene', {
-          level: {
-            name: 'Prototype Complete',
-            objective: 'All available levels are complete for this sprint build.',
-          },
-          previousLevelId: this.level.id,
-        });
+        this.scene.start('EndingScene');
         return;
       }
 
