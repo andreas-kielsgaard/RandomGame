@@ -22,7 +22,7 @@ export function createGameUi(scene, level, totalIngredients) {
     .setDepth(50);
 
   const objective = scene.add
-    .text(24, 78, level.objective, {
+    .text(24, 78, `${level.quest?.title ?? 'Current Quest'}: ${level.objective}`, {
       fontFamily: 'Verdana, Arial, sans-serif',
       fontSize: '14px',
       color: '#fff7db',
@@ -34,9 +34,9 @@ export function createGameUi(scene, level, totalIngredients) {
     .setDepth(50);
 
   const controls = scene.add
-    .text(24, 496, 'Move: A/D or Arrows    Jump: W/Up/Space    R: Respawn    P: Pause    H/?: Help', {
+    .text(24, 496, 'Move: A/D or Arrows    Jump: W/Up/Space    E: Talk    I/C: Inventory    R: Respawn    P: Pause    H/?: Help', {
       fontFamily: 'Verdana, Arial, sans-serif',
-      fontSize: '14px',
+      fontSize: '13px',
       color: '#e7dcff',
       backgroundColor: PANEL_BACKGROUND,
       padding: { x: 10, y: 6 },
@@ -77,13 +77,16 @@ export function createGameUi(scene, level, totalIngredients) {
         'Controls',
         'Move: A/D or Arrow Keys',
         'Jump: W, Up Arrow, or Space',
+        'Talk / advance dialogue: E',
+        'Advance dialogue: Space',
+        'Inventory / crafting: I or C',
         'Respawn: R',
         'Pause: P',
         'Hide help: H or ?',
         '',
         'Quest',
-        'Collect Chef Zynth\'s Quantum Pickle Shard before using the exit portal.',
-      ],
+        'Collect each impossible ingredient, then activate the portal.',
+      ].join('\n'),
       {
         fontFamily: 'Verdana, Arial, sans-serif',
         fontSize: '18px',
@@ -112,6 +115,21 @@ export function createGameUi(scene, level, totalIngredients) {
     .setDepth(85)
     .setVisible(false);
 
+  const inventoryOverlay = scene.add
+    .text(936, 72, '', {
+      fontFamily: 'Verdana, Arial, sans-serif',
+      fontSize: '13px',
+      color: '#fff7db',
+      backgroundColor: 'rgba(12, 6, 28, 0.9)',
+      padding: { x: 14, y: 12 },
+      wordWrap: { width: 360 },
+      lineSpacing: 3,
+    })
+    .setOrigin(1, 0)
+    .setScrollFactor(0)
+    .setDepth(78)
+    .setVisible(false);
+
   return {
     title,
     levelName,
@@ -121,6 +139,7 @@ export function createGameUi(scene, level, totalIngredients) {
     messageText,
     helpOverlay,
     pauseText,
+    inventoryOverlay,
     updateIngredients(collected) {
       ingredientText.setText(getIngredientLabel(collected, totalIngredients));
     },
@@ -137,6 +156,12 @@ export function createGameUi(scene, level, totalIngredients) {
     },
     setPausedVisible(isVisible) {
       pauseText.setVisible(isVisible);
+    },
+    setInventoryVisible(isVisible) {
+      inventoryOverlay.setVisible(isVisible);
+    },
+    updateInventory(text) {
+      inventoryOverlay.setText(text);
     },
   };
 }

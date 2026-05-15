@@ -1,3 +1,5 @@
+import { getLevelNpcs } from '../data/levels.js';
+
 export function loadLevel(scene, level) {
   const { width, height } = level.world;
 
@@ -17,7 +19,7 @@ export function loadLevel(scene, level) {
   addStarField(scene, width, height);
 
   const platforms = scene.physics.add.staticGroup();
-  level.platforms.forEach((platformData) => {
+  (level.platforms ?? []).forEach((platformData) => {
     const platform = platforms.create(platformData.x, platformData.y, 'platform');
     platform.setDisplaySize(platformData.width, platformData.height);
     platform.setDepth(2);
@@ -29,9 +31,16 @@ export function loadLevel(scene, level) {
     const ingredient = ingredients.create(ingredientData.x, ingredientData.y, 'ingredient');
     ingredient.setData('id', ingredientData.id);
     ingredient.setData('name', ingredientData.name);
+    ingredient.setData('ingredient', ingredientData);
     ingredient.setDepth(8);
     ingredient.setCircle(15);
     ingredient.body.allowGravity = false;
+    if (ingredientData.tint) {
+      ingredient.setTint(ingredientData.tint);
+    }
+    if (ingredientData.scale) {
+      ingredient.setScale(ingredientData.scale);
+    }
 
     scene.tweens.add({
       targets: ingredient,
@@ -87,21 +96,33 @@ export function loadLevel(scene, level) {
     portal = { sprite: portalSprite, label };
   }
 
-  const npcSprite = scene.physics.add.staticSprite(level.npc.x, level.npc.y, 'npc');
-  npcSprite.setDepth(7);
-  npcSprite.setData('name', level.npc.name);
-  npcSprite.refreshBody();
+  const npcGroup = scene.physics.add.staticGroup();
+  const npcLabels = [];
+  getLevelNpcs(level).forEach((npcData) => {
+    const npcSprite = npcGroup.create(npcData.x, npcData.y, 'npc');
+    npcSprite.setDepth(7);
+    npcSprite.setData('id', npcData.id);
+    npcSprite.setData('name', npcData.name);
+    npcSprite.setData('npc', npcData);
+    if (npcData.tint) {
+      npcSprite.setTint(npcData.tint);
+    }
+    npcSprite.refreshBody();
 
-  const npcName = scene.add
-    .text(level.npc.x, level.npc.y - 58, level.npc.name, {
-      fontFamily: 'Verdana, Arial, sans-serif',
-      fontSize: '15px',
-      color: '#fff7db',
-      stroke: '#2c1055',
-      strokeThickness: 4,
-    })
-    .setOrigin(0.5)
-    .setDepth(9);
+    const npcName = scene.add
+      .text(npcData.x, npcData.y - 58, npcData.name, {
+        fontFamily: 'Verdana, Arial, sans-serif',
+        fontSize: '15px',
+        color: '#fff7db',
+        stroke: '#2c1055',
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5)
+      .setDepth(9);
+    npcLabels.push(npcName);
+  });
+
+  const firstNpcSprite = npcGroup.getChildren()[0] ?? null;
 
   return {
     platforms,
@@ -109,9 +130,13 @@ export function loadLevel(scene, level) {
     checkpoints,
     hazards,
     portal,
+    npcs: {
+      group: npcGroup,
+      labels: npcLabels,
+    },
     npc: {
-      sprite: npcSprite,
-      nameText: npcName,
+      sprite: firstNpcSprite,
+      nameText: npcLabels[0] ?? null,
     },
   };
 }

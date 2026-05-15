@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { getLevelById } from '../data/levels.js';
+import { getLevelById, getLevelNpcs, levels } from '../data/levels.js';
+import { ARTIFACT_NAME, getRunState } from '../game/runState.js';
 
 export default class ComingSoonScene extends Phaser.Scene {
   constructor() {
@@ -9,6 +10,11 @@ export default class ComingSoonScene extends Phaser.Scene {
   create(data = {}) {
     const level = data.level ?? getLevelById(data.levelId ?? 2);
     const previousLevelId = data.previousLevelId ?? 1;
+    const previousLevel = getLevelById(previousLevelId);
+    const runState = getRunState(this);
+    const ingredientName = level.ingredients?.[0]?.name;
+    const npc = getLevelNpcs(level)[0];
+    const progressCount = Object.keys(runState.components).length;
 
     this.add
       .image(480, 270, 'cosmic-background')
@@ -29,22 +35,32 @@ export default class ComingSoonScene extends Phaser.Scene {
     this.add
       .text(
         480,
-        252,
-        `Coming soon\n\n${level.objective ?? 'This level is waiting for a future prototype pass.'}`,
+        260,
+        [
+          'Coming soon',
+          '',
+          level.story?.teaser ?? level.objective ?? 'This level is waiting for a future prototype pass.',
+          ingredientName ? `Planned ingredient: ${ingredientName}` : null,
+          npc ? `NPC concept: ${npc.name}, ${npc.title ?? npc.concept}` : null,
+          '',
+          `${ARTIFACT_NAME}: ${progressCount}/${levels.length} components installed`,
+        ]
+          .filter(Boolean)
+          .join('\n'),
         {
           fontFamily: 'Verdana, Arial, sans-serif',
-          fontSize: '18px',
+          fontSize: '16px',
           color: '#98fff2',
           align: 'center',
           backgroundColor: 'rgba(12, 6, 28, 0.82)',
           padding: { x: 24, y: 18 },
-          wordWrap: { width: 560 },
+          wordWrap: { width: 640 },
         },
       )
       .setOrigin(0.5);
 
     this.add
-      .text(480, 410, 'Press R to replay Level 1', {
+      .text(480, 438, `Press R to replay ${previousLevel.name}`, {
         fontFamily: 'Verdana, Arial, sans-serif',
         fontSize: '16px',
         color: '#ffe66d',

@@ -1,7 +1,15 @@
 import Phaser from 'phaser';
-import { getLevelById, getNextLevel } from '../data/levels.js';
+import { getLevelById, getNextLevel, levels } from '../data/levels.js';
+import { createDialogueSystem } from '../game/dialogue.js';
 import { loadLevel } from '../game/levelLoader.js';
 import { createPlayer, resetPlayerController, updatePlayerController } from '../game/player.js';
+import {
+  formatInventoryText,
+  getRunState,
+  hasIngredient,
+  recordIngredient,
+  recordQuestContribution,
+} from '../game/runState.js';
 import { createGameUi } from '../game/ui.js';
 
 export default class GameScene extends Phaser.Scene {
@@ -12,16 +20,23 @@ export default class GameScene extends Phaser.Scene {
   create(data = {}) {
     this.level = getLevelById(data.levelId ?? 1);
     if (this.level.status !== 'playable') {
-      this.scene.start('ComingSoonScene', { level: this.level, previousLevelId: 1 });
+      this.scene.start('ComingSoonScene', { level: this.level, previousLevelId: data.previousLevelId ?? 1 });
       return;
     }
 
-    this.collectedIngredients = 0;
-    this.collectedIngredientIds = new Set();
+    this.runState = getRunState(this);
     this.totalIngredients = (this.level.ingredients ?? []).length;
+    this.collectedIngredientIds = new Set(
+      (this.level.ingredients ?? [])
+        .filter((ingredient) => hasIngredient(this, ingredient.id))
+        .map((ingredient) => ingredient.id),
+    );
+    this.collectedIngredients = this.collectedIngredientIds.size;
     this.respawnPosition = { ...this.level.playerStart };
     this.messageExpiresAt = 0;
+    this.portalMessageCooldownUntil = 0;
     this.isHelpVisible = false;
+    this.isInventoryVisible = false;
     this.isPaused = false;
     this.isRespawning = false;
     this.isLevelComplete = false;
@@ -34,13 +49,6 @@ export default class GameScene extends Phaser.Scene {
       this.playerController.sprite,
       this.levelObjects.ingredients,
       this.collectIngredient,
-      null,
-      this,
-    );
-    this.physics.add.overlap(
-      this.playerController.sprite,
-      this.levelObjects.npc.sprite,
-      this.showNpcLine,
       null,
       this,
     );
@@ -72,13 +80,32 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.setDeadzone(170, 105);
 
     this.ui = createGameUi(this, this.level, this.totalIngredients);
+    this.ui.updateIngredients(this.collectedIngredients);
+    this.hideAlreadyCollectedIngredients();
+    this.updateInventoryPanel();
+    this.activatePortalIfReady();
+    this.dialogueSystem = createDialogueSystem(
+      this,
+      this.playerController.sprite,
+      this.levelObjects.npcs.group,
+    );
     this.createActionKeys();
   }
 
   update(time, delta) {
-    this.handleActionKeys();
+    this.dialogueSystem.update();
+    const inputConsumed = this.handleActionKeys();
 
-    if (this.isPaused || this.isRespawning || this.isLevelComplete) {
+    if (this.ui.messageText.visible && time > this.messageExpiresAt) {
+      this.ui.hideMessage();
+    }
+
+    if (inputConsumed) {
+      return;
+    }
+
+    if (this.isPaused || this.isRespawning || this.isLevelComplete || this.dialogueSystem.isOpen()) {
+      this.playerController.sprite.setAccelerationX(0);
       return;
     }
 
@@ -93,14 +120,13 @@ export default class GameScene extends Phaser.Scene {
     if (this.playerController.sprite.y > this.level.world.height + 130) {
       this.respawnPlayer('The void swallowed you. Back to the last checkpoint.');
     }
-
-    if (this.ui.messageText.visible && time > this.messageExpiresAt) {
-      this.ui.hideMessage();
-    }
   }
 
   createActionKeys() {
     this.actionKeys = this.input.keyboard.addKeys({
+      interact: Phaser.Input.Keyboard.KeyCodes.E,
+      inventory: Phaser.Input.Keyboard.KeyCodes.I,
+      craft: Phaser.Input.Keyboard.KeyCodes.C,
       respawn: Phaser.Input.Keyboard.KeyCodes.R,
       pause: Phaser.Input.Keyboard.KeyCodes.P,
     });
@@ -117,30 +143,58 @@ export default class GameScene extends Phaser.Scene {
   }
 
   handleActionKeys() {
+    const interactPressed = Phaser.Input.Keyboard.JustDown(this.actionKeys.interact);
+    const spacePressed = Phaser.Input.Keyboard.JustDown(this.playerController.cursors.space);
+    const dialogueAdvancePressed = interactPressed || (this.dialogueSystem.isOpen() && spacePressed);
+
+    if (this.dialogueSystem.handleInput(dialogueAdvancePressed)) {
+      this.playerController.sprite.setAccelerationX(0);
+      this.playerController.sprite.setVelocityX(0);
+      return true;
+    }
+
+    if (this.dialogueSystem.isOpen()) {
+      return true;
+    }
+
     if (Phaser.Input.Keyboard.JustDown(this.actionKeys.pause)) {
       this.togglePause();
+      return true;
+    }
+
+    if (
+      Phaser.Input.Keyboard.JustDown(this.actionKeys.inventory) ||
+      Phaser.Input.Keyboard.JustDown(this.actionKeys.craft)
+    ) {
+      this.toggleInventory();
+      return true;
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.actionKeys.respawn)) {
       this.respawnPlayer('Respawned at the latest checkpoint.');
+      return true;
     }
+
+    return false;
   }
 
   collectIngredient(playerSprite, ingredient) {
+    const ingredientId = ingredient.getData('id');
+    if (this.collectedIngredientIds.has(ingredientId)) {
+      return;
+    }
+
+    const ingredientData = ingredient.getData('ingredient');
     ingredient.disableBody(true, true);
-    this.collectedIngredients += 1;
-    this.collectedIngredientIds.add(ingredient.getData('id'));
+    this.collectedIngredientIds.add(ingredientId);
+    this.collectedIngredients = this.collectedIngredientIds.size;
     this.ui.updateIngredients(this.collectedIngredients);
+    this.runState = recordIngredient(this, this.level, ingredientData);
+    this.updateInventoryPanel();
 
-    const ingredientName = ingredient.getData('name');
-    this.showWorldPop(ingredient.x, ingredient.y - 30, `Collected ${ingredientName}!`, '#fff19f');
-    this.ui.showMessage('Chef Zynth beams from across the grove. The portal is listening now.', 3200);
+    this.showWorldPop(ingredient.x, ingredient.y - 30, `Collected ${ingredientData.name}!`, '#fff19f');
+    this.ui.showMessage('Quest item acquired. The portal pretends it always believed in you.', 3000);
     this.activatePortalIfReady();
-  }
-
-  showNpcLine() {
-    const { name, line } = this.level.npc;
-    this.ui.showMessage(`${name}: ${line}`, 3600);
   }
 
   activateCheckpoint(playerSprite, checkpoint) {
@@ -178,19 +232,29 @@ export default class GameScene extends Phaser.Scene {
     }
 
     if (!this.hasRequiredIngredients()) {
-      this.ui.showMessage(this.level.exit.lockedMessage, 3000);
+      if (this.time.now < this.portalMessageCooldownUntil) {
+        return;
+      }
+
+      this.portalMessageCooldownUntil = this.time.now + 1100;
+      this.ui.showMessage(this.level.quest?.missingRequirementText ?? this.level.exit.lockedMessage, 3200);
       this.pulseLockedPortal();
       return;
     }
 
     this.isLevelComplete = true;
+    this.runState = recordQuestContribution(this, this.level);
+    this.updateInventoryPanel();
     this.playerController.sprite.setVelocity(0, 0);
     this.playerController.sprite.setAcceleration(0);
-    this.ui.showMessage('Portal satisfied. Launching toward the next cosmic errand...', 1500);
+    this.ui.showMessage(
+      this.level.quest?.completionText ?? 'Portal satisfied. Launching toward the next cosmic errand...',
+      2100,
+    );
     this.cameras.main.flash(350, 152, 255, 242);
 
     const nextLevel = getNextLevel(this.level.id);
-    this.time.delayedCall(800, () => {
+    this.time.delayedCall(1300, () => {
       if (!nextLevel) {
         this.scene.start('ComingSoonScene', {
           level: {
@@ -215,7 +279,9 @@ export default class GameScene extends Phaser.Scene {
   }
 
   hasRequiredIngredients() {
-    return (this.level.exit.requiresIngredientIds ?? []).every((id) => this.collectedIngredientIds.has(id));
+    return (this.level.quest?.requiredIngredientIds ?? this.level.exit.requiresIngredientIds ?? []).every((id) =>
+      this.collectedIngredientIds.has(id) || hasIngredient(this, id),
+    );
   }
 
   activatePortalIfReady() {
@@ -295,6 +361,24 @@ export default class GameScene extends Phaser.Scene {
   toggleHelp() {
     this.isHelpVisible = !this.isHelpVisible;
     this.ui.setHelpVisible(this.isHelpVisible);
+  }
+
+  toggleInventory() {
+    this.isInventoryVisible = !this.isInventoryVisible;
+    this.updateInventoryPanel();
+    this.ui.setInventoryVisible(this.isInventoryVisible);
+  }
+
+  updateInventoryPanel() {
+    this.ui.updateInventory(formatInventoryText(getRunState(this), this.level, levels));
+  }
+
+  hideAlreadyCollectedIngredients() {
+    this.levelObjects.ingredients.getChildren().forEach((ingredient) => {
+      if (this.collectedIngredientIds.has(ingredient.getData('id'))) {
+        ingredient.disableBody(true, true);
+      }
+    });
   }
 
   showWorldPop(x, y, text, color) {
