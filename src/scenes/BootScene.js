@@ -8,6 +8,6 @@ export default class BootScene extends Phaser.Scene {
 
   create() {
     createGeneratedTextures(this);
-    this.scene.start('GameScene', { levelId: 1 });
+    this.scene.start('TitleScene');
   }
 }

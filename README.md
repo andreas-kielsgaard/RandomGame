@@ -18,7 +18,7 @@ Vite will print a local URL, usually `http://localhost:5173`.
 
 ## Prototype Status
 
-Iteration 7 has playable loops for all 5 planned prototype levels. Each level includes generated placeholder art, platforming, camera follow, checkpoint respawn, psychedelic hazards, one collectible ingredient, an NPC quest giver, dialogue interaction, an exit portal gated by the quest item, procedural audio, and animated placeholder presentation. Completing Level 5 assembles **The Cosmic Fax Machine That Sends God a Bug Report** and shows the current prototype ending.
+Iteration 8 is the final prototype-sprint build. The game opens on a title screen, then plays through all 5 planned prototype levels. Each level includes generated placeholder art, platforming, camera follow, checkpoint respawn, psychedelic hazards, one collectible ingredient, an NPC quest giver, dialogue interaction, an exit portal gated by the quest item, procedural audio, and animated placeholder presentation. Completing Level 5 assembles **The Cosmic Fax Machine That Sends God a Bug Report** and shows the current prototype ending.
 
 ## Current Playable Levels
 
@@ -31,6 +31,8 @@ Iteration 7 has playable loops for all 5 planned prototype levels. Each level in
 ## Gameplay Loop
 
 Talk to the local cosmic weirdo, collect their impossible ingredient, avoid hazards, activate checkpoints, and enter the exit portal after the ingredient has been collected. Reaching a portal early shows what is still missing. Collected ingredients and installed fax-machine components persist across level transitions during the run. The finale records the last component, sends a divine support ticket, and lets you press `R` to restart from Level 1.
+
+The title screen starts a fresh run with `Enter`, Space, or click. It also gives the first audio-unlock gesture a polite little bureaucratic shove.
 
 Level 3 introduces Gravity Parole Fields, translucent zones that reduce gravity and increase air control while you are inside them. It also adds bounce pads that launch the player upward automatically.
 
@@ -55,3 +57,29 @@ The player now swaps between idle, run, jump, and fall generated frames. NPCs bo
 - Mute or unmute audio: `M`
 - Pause: `P`
 - Show or hide help: `H` or `?`
+
+## Final QA Checklist
+
+After pulling the repo, run:
+
+```bash
+npm install
+npm run validate
+npm run build
+npm run dev
+```
+
+Expected play flow:
+
+- Start from the title screen.
+- Play Levels 1-5 in order.
+- Talk to each NPC, collect one ingredient per level, and use the portal after the ingredient is collected.
+- Use checkpoints and `R` respawn if a hazard sends you into cosmic paperwork.
+- Reach the ending scene and confirm the fax machine prints ticket `CFQ-0001`.
+
+Known limitations:
+
+- Art and audio are generated placeholders; there is no external asset pipeline yet.
+- Browser audio requires the first key press or click before music/SFX can play.
+- There are no enemies, save slots, gamepad controls, mobile touch controls, or authored audio files yet.
+- This is a compact prototype route, not a difficulty-balanced full platformer campaign.

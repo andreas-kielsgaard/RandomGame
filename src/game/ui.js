@@ -53,8 +53,8 @@ export function createGameUi(scene, level, totalIngredients) {
       padding: { x: 10, y: 6 },
     })
     .setOrigin(1, 0)
-      .setScrollFactor(0)
-      .setDepth(50);
+    .setScrollFactor(0)
+    .setDepth(50);
 
   const audioStatus = scene.add
     .text(936, 58, 'Audio: press any key', {

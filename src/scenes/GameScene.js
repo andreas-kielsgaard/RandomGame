@@ -176,7 +176,7 @@ export default class GameScene extends Phaser.Scene {
       mute: Phaser.Input.Keyboard.KeyCodes.M,
     });
 
-    this.input.keyboard.on('keydown', (event) => {
+    this.helpKeyHandler = (event) => {
       if (event.repeat) {
         return;
       }
@@ -184,6 +184,10 @@ export default class GameScene extends Phaser.Scene {
       if (event.key === '?' || event.key.toLowerCase() === 'h') {
         this.toggleHelp();
       }
+    };
+    this.input.keyboard.on('keydown', this.helpKeyHandler);
+    this.events.once('shutdown', () => {
+      this.input.keyboard.off('keydown', this.helpKeyHandler);
     });
   }
 

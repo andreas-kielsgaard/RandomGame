@@ -61,11 +61,12 @@ export default class EndingScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    const initialAudioStatus = getAudioStatus(this);
     const audioStatus = this.add
-      .text(936, 22, getAudioStatus(this).label, {
+      .text(936, 22, initialAudioStatus.label, {
         fontFamily: 'Verdana, Arial, sans-serif',
         fontSize: '12px',
-        color: getAudioStatus(this).color,
+        color: initialAudioStatus.color,
         backgroundColor: 'rgba(8, 5, 20, 0.62)',
         padding: { x: 8, y: 5 },
       })
@@ -199,11 +200,14 @@ export default class EndingScene extends Phaser.Scene {
       )
       .setOrigin(0.5);
 
-    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M).on('down', () => {
+    const muteKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
+    const muteHandler = () => {
       const status = toggleMute(this);
       audioStatus.setText(status.label);
       audioStatus.setColor(status.color);
-    });
+    };
+    muteKey.on('down', muteHandler);
+    this.events.once('shutdown', () => muteKey.off('down', muteHandler));
 
     this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R).once('down', () => {
       resetRunState(this);

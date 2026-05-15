@@ -315,6 +315,7 @@ function unlockAudio(scene) {
 
   ensureContext(state);
   if (!state.context) {
+    emitAudioStatus(scene, state);
     return;
   }
 
@@ -340,7 +341,15 @@ function ensureContext(state) {
   }
 
   const AudioContextClass = window.AudioContext ?? window.webkitAudioContext;
-  state.context = new AudioContextClass();
+  try {
+    state.context = new AudioContextClass();
+  } catch {
+    state.supported = false;
+    state.context = null;
+    state.masterGain = null;
+    return;
+  }
+
   state.masterGain = state.context.createGain();
   state.masterGain.gain.value = state.muted ? 0 : 0.82;
   state.masterGain.connect(state.context.destination);

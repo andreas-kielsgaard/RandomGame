@@ -57,10 +57,6 @@ export function hasIngredient(scene, ingredientId) {
   return Boolean(getRunState(scene).ingredients[ingredientId]);
 }
 
-export function hasQuestContribution(scene, componentId) {
-  return Boolean(getRunState(scene).components[componentId]);
-}
-
 export function formatInventoryText(state, level, allLevels) {
   const ingredients = Object.values(state.ingredients);
   const components = Object.values(state.components);
