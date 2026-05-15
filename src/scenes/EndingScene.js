@@ -1,5 +1,13 @@
 import Phaser from 'phaser';
 import { levels } from '../data/levels.js';
+import {
+  getAudioStatus,
+  initAudio,
+  onAudioStatusChange,
+  playSfx,
+  startMusic,
+  toggleMute,
+} from '../game/audio.js';
 import { ARTIFACT_NAME, getRunState, resetRunState } from '../game/runState.js';
 
 export default class EndingScene extends Phaser.Scene {
@@ -11,6 +19,8 @@ export default class EndingScene extends Phaser.Scene {
     const runState = getRunState(this);
     const ingredients = Object.values(runState.ingredients);
     const components = Object.values(runState.components);
+    initAudio(this);
+    startMusic(this, { id: 6, name: 'Ending: Divine Support Receipt' });
 
     this.add
       .image(480, 270, 'cosmic-background')
@@ -51,6 +61,21 @@ export default class EndingScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    const audioStatus = this.add
+      .text(936, 22, getAudioStatus(this).label, {
+        fontFamily: 'Verdana, Arial, sans-serif',
+        fontSize: '12px',
+        color: getAudioStatus(this).color,
+        backgroundColor: 'rgba(8, 5, 20, 0.62)',
+        padding: { x: 8, y: 5 },
+      })
+      .setOrigin(1, 0)
+      .setDepth(10);
+    onAudioStatusChange(this, (status) => {
+      audioStatus.setText(status.label);
+      audioStatus.setColor(status.color);
+    });
+
     const faxMachine = this.add
       .image(480, 173, 'cosmic-fax-machine')
       .setScale(1.25)
@@ -64,6 +89,53 @@ export default class EndingScene extends Phaser.Scene {
       yoyo: true,
       repeat: -1,
     });
+    this.tweens.add({
+      targets: faxMachine,
+      angle: 2,
+      duration: 85,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: 8,
+    });
+
+    const printout = this.add
+      .rectangle(480, 218, 132, 8, 0xfff7db, 0.92)
+      .setOrigin(0.5, 0)
+      .setDepth(3);
+    const printoutText = this.add
+      .text(480, 229, 'CFQ-0001\nLOW PRIORITY\nASSIGNED: SELF', {
+        fontFamily: 'Verdana, Arial, sans-serif',
+        fontSize: '10px',
+        color: '#201047',
+        align: 'center',
+      })
+      .setOrigin(0.5, 0)
+      .setAlpha(0)
+      .setDepth(4);
+    this.tweens.add({
+      targets: printout,
+      displayHeight: 58,
+      duration: 1150,
+      ease: 'Linear',
+    });
+    this.tweens.add({
+      targets: printoutText,
+      alpha: 1,
+      delay: 420,
+      duration: 260,
+    });
+    this.add
+      .particles(480, 175, 'star-dot', {
+        lifespan: 1200,
+        speed: { min: 22, max: 96 },
+        scale: { start: 0.62, end: 0 },
+        alpha: { start: 0.8, end: 0 },
+        tint: [0x98fff2, 0xff78dc, 0xffe66d],
+        frequency: 70,
+        quantity: 1,
+      })
+      .setDepth(2);
+    playSfx(this, 'endingFax');
 
     this.add
       .text(
@@ -113,7 +185,7 @@ export default class EndingScene extends Phaser.Scene {
         [
           'Ticket CFQ-0001 created.',
           'Priority: low. Assigned to: Self. Resolution: cannot reproduce, but vibes acknowledged.',
-          'Press R to restart the prototype from Level 1.',
+          'Press R to restart from Level 1. Press M to mute the cosmic backend.',
         ].join('\n'),
         {
           fontFamily: 'Verdana, Arial, sans-serif',
@@ -126,6 +198,12 @@ export default class EndingScene extends Phaser.Scene {
         },
       )
       .setOrigin(0.5);
+
+    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M).on('down', () => {
+      const status = toggleMute(this);
+      audioStatus.setText(status.label);
+      audioStatus.setColor(status.color);
+    });
 
     this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R).once('down', () => {
       resetRunState(this);

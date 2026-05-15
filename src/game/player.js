@@ -11,7 +11,7 @@ const COYOTE_TIME_MS = 105;
 const JUMP_BUFFER_MS = 120;
 
 export function createPlayer(scene, start) {
-  const sprite = scene.physics.add.sprite(start.x, start.y, 'player');
+  const sprite = scene.physics.add.sprite(start.x, start.y, 'player-idle');
   sprite.setCollideWorldBounds(true);
   sprite.setDepth(10);
   sprite.setDragX(GROUND_DRAG);
@@ -34,6 +34,7 @@ export function createPlayer(scene, start) {
     isGroundedLastFrame: false,
     gravityScale: 1,
     airControlMultiplier: 1,
+    presentationTexture: 'player-idle',
   };
 }
 
@@ -85,6 +86,7 @@ export function updatePlayerController(scene, controller, delta) {
 
   controller.jumpHeldLastFrame = jumpHeld;
   controller.isGroundedLastFrame = isGrounded;
+  updatePlayerPresentation(scene, controller, isGrounded);
 
   return { jumped, landed, isGrounded };
 }
@@ -98,5 +100,25 @@ export function resetPlayerController(controller) {
   controller.isGroundedLastFrame = false;
   controller.gravityScale = 1;
   controller.airControlMultiplier = 1;
+  controller.presentationTexture = 'player-idle';
+  controller.sprite.setTexture('player-idle');
+  controller.sprite.setScale(1);
   controller.sprite.body.setGravityY(0);
+}
+
+function updatePlayerPresentation(scene, controller, isGrounded) {
+  const { sprite } = controller;
+  const speed = Math.abs(sprite.body.velocity.x);
+  let textureKey = 'player-idle';
+
+  if (!isGrounded) {
+    textureKey = sprite.body.velocity.y < 0 ? 'player-jump' : 'player-fall';
+  } else if (speed > 24) {
+    textureKey = Math.floor(scene.time.now / 115) % 2 === 0 ? 'player-run-1' : 'player-run-2';
+  }
+
+  if (controller.presentationTexture !== textureKey) {
+    sprite.setTexture(textureKey);
+    controller.presentationTexture = textureKey;
+  }
 }

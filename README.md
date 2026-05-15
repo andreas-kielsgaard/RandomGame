@@ -18,7 +18,7 @@ Vite will print a local URL, usually `http://localhost:5173`.
 
 ## Prototype Status
 
-Iteration 6 has playable loops for all 5 planned prototype levels. Each level includes generated placeholder art, platforming, camera follow, checkpoint respawn, psychedelic hazards, one collectible ingredient, an NPC quest giver, dialogue interaction, and an exit portal gated by the quest item. Completing Level 5 assembles **The Cosmic Fax Machine That Sends God a Bug Report** and shows the current prototype ending.
+Iteration 7 has playable loops for all 5 planned prototype levels. Each level includes generated placeholder art, platforming, camera follow, checkpoint respawn, psychedelic hazards, one collectible ingredient, an NPC quest giver, dialogue interaction, an exit portal gated by the quest item, procedural audio, and animated placeholder presentation. Completing Level 5 assembles **The Cosmic Fax Machine That Sends God a Bug Report** and shows the current prototype ending.
 
 ## Current Playable Levels
 
@@ -38,6 +38,12 @@ Level 4 adds passive market stalls/signs. Stand near them to read spiritually qu
 
 Level 5 reuses Gravity Parole Fields and bounce pads in a final support-queue ascent. It also adds passive support terminals with cosmic backend warnings and a generated fax-machine ending visual.
 
+## Audio and Animation
+
+The prototype uses Web Audio to generate sound effects, soft looping cosmic ambience, and short NPC voice barks in code. Audio unlocks after the first key or pointer press to respect browser autoplay rules. Press `M` to mute or unmute the cosmic backend.
+
+The player now swaps between idle, run, jump, and fall generated frames. NPCs bob and pulse, ingredients shimmer, portals rotate and sparkle, and the ending fax machine prints a tiny support ticket while making procedural office-divinity noises.
+
 ## Controls
 
 - Move: `A` / `D` or Left / Right Arrow
@@ -46,5 +52,6 @@ Level 5 reuses Gravity Parole Fields and bounce pads in a final support-queue as
 - Advance dialogue: Space
 - Show or hide inventory and fax crafting progress: `I` or `C`
 - Respawn from checkpoint / restart from ending: `R`
+- Mute or unmute audio: `M`
 - Pause: `P`
 - Show or hide help: `H` or `?`

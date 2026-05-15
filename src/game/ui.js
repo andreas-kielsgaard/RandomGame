@@ -34,7 +34,7 @@ export function createGameUi(scene, level, totalIngredients) {
     .setDepth(50);
 
   const controls = scene.add
-    .text(24, 496, 'Move: A/D or Arrows    Jump: W/Up/Space    E: Talk    I/C: Inventory    R: Respawn    P: Pause    H/?: Help', {
+    .text(24, 496, 'Move: A/D or Arrows    Jump: W/Up/Space    E: Talk    I/C: Inventory    R: Respawn    M: Mute    P: Pause    H/?: Help', {
       fontFamily: 'Verdana, Arial, sans-serif',
       fontSize: '13px',
       color: '#e7dcff',
@@ -51,6 +51,18 @@ export function createGameUi(scene, level, totalIngredients) {
       color: '#ffe66d',
       backgroundColor: 'rgba(8, 5, 20, 0.62)',
       padding: { x: 10, y: 6 },
+    })
+    .setOrigin(1, 0)
+      .setScrollFactor(0)
+      .setDepth(50);
+
+  const audioStatus = scene.add
+    .text(936, 58, 'Audio: press any key', {
+      fontFamily: 'Verdana, Arial, sans-serif',
+      fontSize: '12px',
+      color: '#ffe66d',
+      backgroundColor: 'rgba(8, 5, 20, 0.62)',
+      padding: { x: 8, y: 5 },
     })
     .setOrigin(1, 0)
     .setScrollFactor(0)
@@ -81,13 +93,16 @@ export function createGameUi(scene, level, totalIngredients) {
         'Advance dialogue: Space',
         'Inventory / crafting: I or C',
         'Respawn: R',
+        'Mute the cosmic backend: M',
         'Pause: P',
         'Hide help: H or ?',
+        'Audio unlocks on your first key or pointer press.',
         '',
         'Mechanics',
         'Gravity Parole Fields soften gravity and improve air control.',
         'Bounce pads launch you automatically.',
         'Market stalls and support terminals display questionable wisdom when you stand nearby.',
+        'NPCs speak in procedural nonsense syllables, as tradition requires.',
         '',
         'Quest',
         'Collect each impossible ingredient, then activate the portal.',
@@ -141,6 +156,7 @@ export function createGameUi(scene, level, totalIngredients) {
     objective,
     controls,
     ingredientText,
+    audioStatus,
     messageText,
     helpOverlay,
     pauseText,
@@ -167,6 +183,10 @@ export function createGameUi(scene, level, totalIngredients) {
     },
     updateInventory(text) {
       inventoryOverlay.setText(text);
+    },
+    updateAudioStatus(status) {
+      audioStatus.setText(status.label);
+      audioStatus.setColor(status.color);
     },
   };
 }

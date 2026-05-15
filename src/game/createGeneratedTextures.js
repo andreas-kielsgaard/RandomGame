@@ -2,6 +2,11 @@ const textureKeys = [
   'cosmic-background',
   'star-dot',
   'player',
+  'player-idle',
+  'player-run-1',
+  'player-run-2',
+  'player-jump',
+  'player-fall',
   'platform',
   'ingredient',
   'npc',
@@ -22,7 +27,24 @@ export function createGeneratedTextures(scene) {
 
   createCanvasTexture(scene, 'cosmic-background', 960, 540, drawCosmicBackground);
   createCanvasTexture(scene, 'star-dot', 16, 16, drawStarDot);
-  createCanvasTexture(scene, 'player', 42, 54, drawPlayer);
+  createCanvasTexture(scene, 'player', 42, 54, (context, width, height) =>
+    drawPlayer(context, width, height, 'idle'),
+  );
+  createCanvasTexture(scene, 'player-idle', 42, 54, (context, width, height) =>
+    drawPlayer(context, width, height, 'idle'),
+  );
+  createCanvasTexture(scene, 'player-run-1', 42, 54, (context, width, height) =>
+    drawPlayer(context, width, height, 'run-1'),
+  );
+  createCanvasTexture(scene, 'player-run-2', 42, 54, (context, width, height) =>
+    drawPlayer(context, width, height, 'run-2'),
+  );
+  createCanvasTexture(scene, 'player-jump', 42, 54, (context, width, height) =>
+    drawPlayer(context, width, height, 'jump'),
+  );
+  createCanvasTexture(scene, 'player-fall', 42, 54, (context, width, height) =>
+    drawPlayer(context, width, height, 'fall'),
+  );
   createCanvasTexture(scene, 'platform', 96, 28, drawPlatform);
   createCanvasTexture(scene, 'ingredient', 36, 36, drawIngredient);
   createCanvasTexture(scene, 'npc', 58, 76, drawNpc);
@@ -105,32 +127,68 @@ function drawStarDot(context, width, height) {
   context.fillRect(0, 0, width, height);
 }
 
-function drawPlayer(context) {
+function drawPlayer(context, width, height, variant = 'idle') {
+  const runOffset = variant === 'run-1' ? -2 : variant === 'run-2' ? 2 : 0;
+  const headY = variant === 'jump' ? 5 : variant === 'fall' ? 10 : 7;
+  const bodyY = variant === 'jump' ? 20 : variant === 'fall' ? 17 : 18;
+  const bodyHeight = variant === 'fall' ? 27 : 30;
+  const visorColor = variant === 'jump' ? '#ffe66d' : variant === 'fall' ? '#98fff2' : '#fff9a6';
+
   context.shadowColor = '#24fff0';
   context.shadowBlur = 14;
-  roundedRect(context, 10, 18, 22, 30, 10);
+  roundedRect(context, 10 + runOffset, bodyY, 22, bodyHeight, 10);
   context.fillStyle = '#7a2cff';
   context.fill();
 
   context.shadowBlur = 0;
   context.fillStyle = '#1ef8e6';
-  roundedRect(context, 7, 7, 28, 22, 12);
+  roundedRect(context, 7 + runOffset, headY, 28, 22, 12);
   context.fill();
 
-  const visor = context.createLinearGradient(11, 13, 31, 22);
-  visor.addColorStop(0, '#fff9a6');
+  const visor = context.createLinearGradient(11, headY + 6, 31, headY + 15);
+  visor.addColorStop(0, visorColor);
   visor.addColorStop(1, '#ff4fd8');
   context.fillStyle = visor;
-  roundedRect(context, 12, 13, 18, 9, 5);
+  roundedRect(context, 12 + runOffset, headY + 6, 18, 9, 5);
   context.fill();
 
   context.fillStyle = '#fef7ff';
-  context.fillRect(14, 47, 5, 6);
-  context.fillRect(25, 47, 5, 6);
+  if (variant === 'run-1') {
+    context.fillRect(11, 47, 6, 6);
+    context.fillRect(27, 45, 5, 8);
+  } else if (variant === 'run-2') {
+    context.fillRect(13, 45, 5, 8);
+    context.fillRect(26, 47, 6, 6);
+  } else if (variant === 'jump') {
+    context.fillRect(13, 47, 5, 6);
+    context.fillRect(26, 47, 5, 6);
+    context.strokeStyle = '#ffe66d';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(15, 53);
+    context.lineTo(12, height);
+    context.moveTo(28, 53);
+    context.lineTo(31, height);
+    context.stroke();
+  } else if (variant === 'fall') {
+    context.fillRect(12, 44, 5, 9);
+    context.fillRect(27, 44, 5, 9);
+    context.strokeStyle = 'rgba(255, 120, 220, 0.85)';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(7, 18);
+    context.lineTo(2, 11);
+    context.moveTo(35, 18);
+    context.lineTo(40, 11);
+    context.stroke();
+  } else {
+    context.fillRect(14, 47, 5, 6);
+    context.fillRect(25, 47, 5, 6);
+  }
 
   context.strokeStyle = '#201047';
   context.lineWidth = 2;
-  roundedRect(context, 10, 18, 22, 30, 10);
+  roundedRect(context, 10 + runOffset, bodyY, 22, bodyHeight, 10);
   context.stroke();
 }
 

@@ -1,3 +1,5 @@
+import { playDialogueVoice } from './audio.js';
+
 const TALK_DISTANCE = 96;
 
 export function createDialogueSystem(scene, playerSprite, npcGroup) {
@@ -95,7 +97,7 @@ export function createDialogueSystem(scene, playerSprite, npcGroup) {
       }
 
       if (state.activeNpc) {
-        advanceDialogue(state, {
+        advanceDialogue(scene, state, {
           panel,
           nameText,
           titleText,
@@ -154,10 +156,10 @@ function openDialogue(scene, state, npcSprite, ui) {
   ui.titleText.setText(npcData.title ?? 'Cosmic Bystander');
 
   setVisible(ui, true);
-  renderLine(state, ui);
+  renderLine(scene, state, ui);
 }
 
-function advanceDialogue(state, ui) {
+function advanceDialogue(scene, state, ui) {
   state.lineIndex += 1;
 
   if (state.lineIndex >= state.lines.length) {
@@ -168,13 +170,15 @@ function advanceDialogue(state, ui) {
     return;
   }
 
-  renderLine(state, ui);
+  renderLine(scene, state, ui);
 }
 
-function renderLine(state, ui) {
+function renderLine(scene, state, ui) {
   const progress = `${state.lineIndex + 1}/${state.lines.length}`;
+  const npcData = state.activeNpc?.getData('npc');
   ui.bodyText.setText(state.lines[state.lineIndex]);
   ui.hintText.setText(`E / Space ${progress}`);
+  playDialogueVoice(scene, npcData?.id);
 }
 
 function setVisible(ui, isVisible) {

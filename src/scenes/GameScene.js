@@ -1,5 +1,13 @@
 import Phaser from 'phaser';
 import { getLevelById, getNextLevel, levels } from '../data/levels.js';
+import {
+  getAudioStatus,
+  initAudio,
+  onAudioStatusChange,
+  playSfx,
+  startMusic,
+  toggleMute,
+} from '../game/audio.js';
 import { applyBouncePad } from '../game/bouncePads.js';
 import { createDialogueSystem } from '../game/dialogue.js';
 import { updateGravityFields } from '../game/gravityFields.js';
@@ -43,6 +51,7 @@ export default class GameScene extends Phaser.Scene {
     this.isPaused = false;
     this.isRespawning = false;
     this.isLevelComplete = false;
+    this.portalIsActive = false;
 
     this.levelObjects = loadLevel(this, this.level);
     this.playerController = createPlayer(this, this.level.playerStart);
@@ -90,10 +99,14 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.setDeadzone(170, 105);
 
     this.ui = createGameUi(this, this.level, this.totalIngredients);
+    initAudio(this);
+    onAudioStatusChange(this, (status) => this.ui.updateAudioStatus(status));
+    this.ui.updateAudioStatus(getAudioStatus(this));
+    startMusic(this, this.level);
     this.ui.updateIngredients(this.collectedIngredients);
     this.hideAlreadyCollectedIngredients();
     this.updateInventoryPanel();
-    this.activatePortalIfReady();
+    this.activatePortalIfReady({ silent: true });
     this.dialogueSystem = createDialogueSystem(
       this,
       this.playerController.sprite,
@@ -124,14 +137,32 @@ export default class GameScene extends Phaser.Scene {
 
     const playerEvents = updatePlayerController(this, this.playerController, delta);
     if (playerEvents.jumped) {
+      playSfx(this, 'jump');
       this.spawnPlayerBurst(this.playerController.sprite.x, this.playerController.sprite.y + 24, 0x98fff2, 8);
+      this.tweens.add({
+        targets: this.playerController.sprite,
+        scaleX: 0.9,
+        scaleY: 1.12,
+        duration: 70,
+        yoyo: true,
+        ease: 'Sine.easeOut',
+      });
     }
     if (playerEvents.landed) {
+      playSfx(this, 'land');
       this.spawnPlayerBurst(this.playerController.sprite.x, this.playerController.sprite.y + 28, 0xffe66d, 6);
+      this.tweens.add({
+        targets: this.playerController.sprite,
+        scaleX: 1.12,
+        scaleY: 0.88,
+        duration: 82,
+        yoyo: true,
+        ease: 'Sine.easeOut',
+      });
     }
 
     if (this.playerController.sprite.y > this.level.world.height + 130) {
-      this.respawnPlayer('The void swallowed you. Back to the last checkpoint.');
+      this.respawnPlayer('The void swallowed you. Back to the last checkpoint.', 'hazard');
     }
   }
 
@@ -142,6 +173,7 @@ export default class GameScene extends Phaser.Scene {
       craft: Phaser.Input.Keyboard.KeyCodes.C,
       respawn: Phaser.Input.Keyboard.KeyCodes.R,
       pause: Phaser.Input.Keyboard.KeyCodes.P,
+      mute: Phaser.Input.Keyboard.KeyCodes.M,
     });
 
     this.input.keyboard.on('keydown', (event) => {
@@ -175,16 +207,22 @@ export default class GameScene extends Phaser.Scene {
       return true;
     }
 
+    if (Phaser.Input.Keyboard.JustDown(this.actionKeys.mute)) {
+      this.ui.updateAudioStatus(toggleMute(this));
+      return true;
+    }
+
     if (
       Phaser.Input.Keyboard.JustDown(this.actionKeys.inventory) ||
       Phaser.Input.Keyboard.JustDown(this.actionKeys.craft)
     ) {
       this.toggleInventory();
+      playSfx(this, 'inventory');
       return true;
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.actionKeys.respawn)) {
-      this.respawnPlayer('Respawned at the latest checkpoint.');
+      this.respawnPlayer('Respawned at the latest checkpoint.', 'respawn');
       return true;
     }
 
@@ -205,6 +243,7 @@ export default class GameScene extends Phaser.Scene {
     this.runState = recordIngredient(this, this.level, ingredientData);
     this.updateInventoryPanel();
 
+    playSfx(this, 'collect');
     this.showWorldPop(ingredient.x, ingredient.y - 30, `Collected ${ingredientData.name}!`, '#fff19f');
     this.ui.showMessage('Quest item acquired. The portal pretends it always believed in you.', 3000);
     this.activatePortalIfReady();
@@ -223,6 +262,7 @@ export default class GameScene extends Phaser.Scene {
     checkpoint.setData('active', true);
     checkpoint.setTint(0x98fff2);
     this.respawnPosition = { ...checkpoint.getData('respawn') };
+    playSfx(this, 'checkpoint');
     this.showWorldPop(checkpoint.x, checkpoint.y - 50, 'Checkpoint tuned!', '#98fff2');
     this.ui.showMessage('Checkpoint tuned. Reality will snap back here if things get sticky.', 2400);
     this.tweens.add({
@@ -236,7 +276,7 @@ export default class GameScene extends Phaser.Scene {
 
   hitHazard(playerSprite, hazard) {
     const hazardName = hazard.getData('name') ?? 'hazard';
-    this.respawnPlayer(`${hazardName} scrambled your atoms. Respawning at the last checkpoint.`);
+    this.respawnPlayer(`${hazardName} scrambled your atoms. Respawning at the last checkpoint.`, 'hazard');
   }
 
   hitBouncePad(playerSprite, pad) {
@@ -244,6 +284,7 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
 
+    playSfx(this, 'bounce');
     this.spawnPlayerBurst(pad.x, pad.y - 12, 0xffe66d, 10);
     this.showWorldPop(pad.x, pad.y - 36, 'Appeal launched!', '#ffe66d');
   }
@@ -260,11 +301,13 @@ export default class GameScene extends Phaser.Scene {
 
       this.portalMessageCooldownUntil = this.time.now + 1100;
       this.ui.showMessage(this.level.quest?.missingRequirementText ?? this.level.exit.lockedMessage, 3200);
+      playSfx(this, 'portalLocked');
       this.pulseLockedPortal();
       return;
     }
 
     this.isLevelComplete = true;
+    playSfx(this, 'levelComplete');
     this.runState = recordQuestContribution(this, this.level);
     this.updateInventoryPanel();
     this.playerController.sprite.setVelocity(0, 0);
@@ -300,15 +343,26 @@ export default class GameScene extends Phaser.Scene {
     );
   }
 
-  activatePortalIfReady() {
+  activatePortalIfReady({ silent = false } = {}) {
     if (!this.levelObjects.portal || !this.hasRequiredIngredients()) {
-      return;
+      return false;
     }
 
-    const { sprite, label } = this.levelObjects.portal;
+    if (this.portalIsActive) {
+      return false;
+    }
+
+    const { sprite, label, lockedTween } = this.levelObjects.portal;
+    this.portalIsActive = true;
+    lockedTween?.stop();
     sprite.setAlpha(1);
     sprite.setTint(0x98fff2);
     label.setColor('#98fff2');
+
+    if (!silent) {
+      playSfx(this, 'portalActive');
+      this.spawnPlayerBurst(sprite.x, sprite.y, 0x98fff2, 18);
+    }
 
     this.tweens.add({
       targets: sprite,
@@ -318,6 +372,8 @@ export default class GameScene extends Phaser.Scene {
       repeat: 1,
       ease: 'Sine.easeInOut',
     });
+
+    return true;
   }
 
   pulseLockedPortal() {
@@ -334,13 +390,14 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
-  respawnPlayer(message) {
+  respawnPlayer(message, sfxKey = 'respawn') {
     if (this.isRespawning || this.isLevelComplete) {
       return;
     }
 
     const { sprite } = this.playerController;
     this.isRespawning = true;
+    playSfx(this, sfxKey);
     this.ui.showMessage(message, 2200);
     this.cameras.main.shake(130, 0.006);
     this.spawnPlayerBurst(sprite.x, sprite.y, 0xff4fd8, 14);

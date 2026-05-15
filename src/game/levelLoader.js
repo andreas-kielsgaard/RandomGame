@@ -45,10 +45,27 @@ export function loadLevel(scene, level) {
       ingredient.setScale(ingredientData.scale);
     }
 
+    const baseScale = ingredientData.scale ?? 1;
     scene.tweens.add({
       targets: ingredient,
       y: ingredient.y - 12,
       duration: 900,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1,
+    });
+    scene.tweens.add({
+      targets: ingredient,
+      angle: 360,
+      duration: 2600,
+      ease: 'Linear',
+      repeat: -1,
+    });
+    scene.tweens.add({
+      targets: ingredient,
+      scale: baseScale * 1.18,
+      alpha: 0.82,
+      duration: 520,
       ease: 'Sine.easeInOut',
       yoyo: true,
       repeat: -1,
@@ -95,6 +112,33 @@ export function loadLevel(scene, level) {
     portalSprite.setAlpha(0.68);
     portalSprite.setTint(0x7c5bff);
     portalSprite.refreshBody();
+    scene.tweens.add({
+      targets: portalSprite,
+      angle: 360,
+      duration: 7200,
+      ease: 'Linear',
+      repeat: -1,
+    });
+    const portalLockedTween = scene.tweens.add({
+      targets: portalSprite,
+      alpha: 0.48,
+      duration: 900,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1,
+    });
+
+    const portalParticles = scene.add
+      .particles(level.exit.x, level.exit.y, 'star-dot', {
+        lifespan: 950,
+        speed: { min: 18, max: 54 },
+        scale: { start: 0.42, end: 0 },
+        alpha: { start: 0.58, end: 0 },
+        tint: [0x7c5bff, 0xff78dc, 0x98fff2],
+        frequency: 105,
+        quantity: 1,
+      })
+      .setDepth(5);
 
     const label = scene.add
       .text(level.exit.x, level.exit.y - 70, 'Exit Portal', {
@@ -107,7 +151,7 @@ export function loadLevel(scene, level) {
       .setOrigin(0.5)
       .setDepth(9);
 
-    portal = { sprite: portalSprite, label };
+    portal = { sprite: portalSprite, label, particles: portalParticles, lockedTween: portalLockedTween };
   }
 
   const npcGroup = scene.physics.add.staticGroup();
@@ -134,6 +178,25 @@ export function loadLevel(scene, level) {
       .setOrigin(0.5)
       .setDepth(9);
     npcLabels.push(npcName);
+
+    scene.tweens.add({
+      targets: [npcSprite, npcName],
+      y: '-=5',
+      duration: 980 + npcLabels.length * 180,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1,
+    });
+    scene.tweens.add({
+      targets: npcSprite,
+      scaleX: 1.04,
+      scaleY: 0.96,
+      alpha: 0.88,
+      duration: 760 + npcLabels.length * 130,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1,
+    });
   });
 
   const firstNpcSprite = npcGroup.getChildren()[0] ?? null;
