@@ -1,6 +1,7 @@
 import { getLevelNpcs } from '../data/levels.js';
 import { createBouncePads } from './bouncePads.js';
 import { createGravityFields } from './gravityFields.js';
+import { createMarketStalls } from './marketStalls.js';
 
 export function loadLevel(scene, level) {
   const { width, height } = level.world;
@@ -76,6 +77,7 @@ export function loadLevel(scene, level) {
 
   const gravityFields = createGravityFields(scene, level.gravityFields ?? []);
   const bouncePads = createBouncePads(scene, level.bouncePads ?? []);
+  const marketStalls = createMarketStalls(scene, level.marketStalls ?? []);
 
   let portal = null;
   if (level.exit) {
@@ -136,6 +138,7 @@ export function loadLevel(scene, level) {
     hazards,
     gravityFields,
     bouncePads,
+    marketStalls,
     portal,
     npcs: {
       group: npcGroup,

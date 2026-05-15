@@ -4,6 +4,7 @@ import { applyBouncePad } from '../game/bouncePads.js';
 import { createDialogueSystem } from '../game/dialogue.js';
 import { updateGravityFields } from '../game/gravityFields.js';
 import { loadLevel } from '../game/levelLoader.js';
+import { updateMarketStalls } from '../game/marketStalls.js';
 import { createPlayer, resetPlayerController, updatePlayerController } from '../game/player.js';
 import {
   formatInventoryText,
@@ -103,6 +104,7 @@ export default class GameScene extends Phaser.Scene {
 
   update(time, delta) {
     this.dialogueSystem.update();
+    updateMarketStalls(this.playerController.sprite, this.levelObjects.marketStalls);
     const inputConsumed = this.handleActionKeys();
 
     if (this.ui.messageText.visible && time > this.messageExpiresAt) {

@@ -10,6 +10,7 @@ const textureKeys = [
   'portal',
   'gravity-field',
   'bounce-pad',
+  'market-stall',
 ];
 
 export function createGeneratedTextures(scene) {
@@ -28,6 +29,7 @@ export function createGeneratedTextures(scene) {
   createCanvasTexture(scene, 'portal', 74, 106, drawPortal);
   createCanvasTexture(scene, 'gravity-field', 64, 64, drawGravityField);
   createCanvasTexture(scene, 'bounce-pad', 96, 28, drawBouncePad);
+  createCanvasTexture(scene, 'market-stall', 92, 76, drawMarketStall);
 }
 
 function createCanvasTexture(scene, key, width, height, draw) {
@@ -351,6 +353,46 @@ function drawBouncePad(context, width, height) {
   context.lineTo(width / 2, 5);
   context.lineTo(width - 18, 14);
   context.stroke();
+}
+
+function drawMarketStall(context, width, height) {
+  context.shadowColor = '#ff78dc';
+  context.shadowBlur = 12;
+  context.fillStyle = '#ffe66d';
+  roundedRect(context, 8, 18, width - 16, 22, 7);
+  context.fill();
+
+  context.shadowBlur = 0;
+  context.fillStyle = '#201047';
+  roundedRect(context, 12, 38, width - 24, 28, 5);
+  context.fill();
+
+  const awning = context.createLinearGradient(0, 10, width, 30);
+  awning.addColorStop(0, '#ff78dc');
+  awning.addColorStop(0.5, '#98fff2');
+  awning.addColorStop(1, '#ffae35');
+  context.fillStyle = awning;
+  context.beginPath();
+  context.moveTo(8, 22);
+  context.lineTo(18, 8);
+  context.lineTo(width - 18, 8);
+  context.lineTo(width - 8, 22);
+  context.closePath();
+  context.fill();
+
+  context.strokeStyle = '#fff7db';
+  context.lineWidth = 2;
+  for (let x = 20; x < width - 10; x += 17) {
+    context.beginPath();
+    context.moveTo(x, 9);
+    context.lineTo(x - 5, 22);
+    context.stroke();
+  }
+
+  context.fillStyle = '#fff7db';
+  context.fillRect(19, 46, 12, 10);
+  context.fillRect(39, 44, 13, 12);
+  context.fillRect(60, 47, 10, 9);
 }
 
 function roundedRect(context, x, y, width, height, radius) {
