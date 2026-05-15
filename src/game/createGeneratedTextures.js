@@ -8,6 +8,8 @@ const textureKeys = [
   'checkpoint',
   'hazard',
   'portal',
+  'gravity-field',
+  'bounce-pad',
 ];
 
 export function createGeneratedTextures(scene) {
@@ -24,6 +26,8 @@ export function createGeneratedTextures(scene) {
   createCanvasTexture(scene, 'checkpoint', 48, 70, drawCheckpoint);
   createCanvasTexture(scene, 'hazard', 96, 32, drawHazard);
   createCanvasTexture(scene, 'portal', 74, 106, drawPortal);
+  createCanvasTexture(scene, 'gravity-field', 64, 64, drawGravityField);
+  createCanvasTexture(scene, 'bounce-pad', 96, 28, drawBouncePad);
 }
 
 function createCanvasTexture(scene, key, width, height, draw) {
@@ -301,6 +305,52 @@ function drawPortal(context, width, height) {
   context.beginPath();
   context.ellipse(centerX, centerY, 10, 24, 0, 0, Math.PI * 2);
   context.fill();
+}
+
+function drawGravityField(context, width, height) {
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = 'rgba(152, 255, 242, 0.08)';
+  context.fillRect(0, 0, width, height);
+
+  context.strokeStyle = 'rgba(255, 247, 219, 0.34)';
+  context.lineWidth = 2;
+  for (let index = -1; index < 4; index += 1) {
+    const y = index * 18 + 8;
+    context.beginPath();
+    context.moveTo(0, y);
+    context.bezierCurveTo(18, y - 16, 40, y + 16, width, y - 4);
+    context.stroke();
+  }
+
+  context.fillStyle = 'rgba(255, 120, 220, 0.28)';
+  context.beginPath();
+  context.arc(17, 16, 4, 0, Math.PI * 2);
+  context.arc(47, 43, 3, 0, Math.PI * 2);
+  context.fill();
+}
+
+function drawBouncePad(context, width, height) {
+  context.shadowColor = '#ffe66d';
+  context.shadowBlur = 14;
+  context.fillStyle = '#ffe66d';
+  roundedRect(context, 5, 8, width - 10, height - 10, 10);
+  context.fill();
+
+  context.shadowBlur = 0;
+  const body = context.createLinearGradient(0, 0, 0, height);
+  body.addColorStop(0, '#ff78dc');
+  body.addColorStop(1, '#4a1ca2');
+  context.fillStyle = body;
+  roundedRect(context, 9, 4, width - 18, height - 11, 9);
+  context.fill();
+
+  context.strokeStyle = '#98fff2';
+  context.lineWidth = 3;
+  context.beginPath();
+  context.moveTo(18, 14);
+  context.lineTo(width / 2, 5);
+  context.lineTo(width - 18, 14);
+  context.stroke();
 }
 
 function roundedRect(context, x, y, width, height, radius) {

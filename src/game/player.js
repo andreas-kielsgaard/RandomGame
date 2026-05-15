@@ -32,6 +32,8 @@ export function createPlayer(scene, start) {
     jumpBufferTimer: 0,
     jumpHeldLastFrame: false,
     isGroundedLastFrame: false,
+    gravityScale: 1,
+    airControlMultiplier: 1,
   };
 }
 
@@ -61,7 +63,10 @@ export function updatePlayerController(scene, controller, delta) {
     sprite.setDragX(isGrounded ? GROUND_DRAG : AIR_DRAG);
   } else {
     const direction = leftDown ? -1 : 1;
-    sprite.setAccelerationX(direction * (isGrounded ? GROUND_ACCELERATION : AIR_ACCELERATION));
+    const acceleration = isGrounded
+      ? GROUND_ACCELERATION
+      : AIR_ACCELERATION * controller.airControlMultiplier;
+    sprite.setAccelerationX(direction * acceleration);
     sprite.setDragX(isGrounded ? GROUND_DRAG : AIR_DRAG);
     sprite.setFlipX(direction < 0);
   }
@@ -91,4 +96,7 @@ export function resetPlayerController(controller) {
   controller.jumpBufferTimer = 0;
   controller.jumpHeldLastFrame = false;
   controller.isGroundedLastFrame = false;
+  controller.gravityScale = 1;
+  controller.airControlMultiplier = 1;
+  controller.sprite.body.setGravityY(0);
 }

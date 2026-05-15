@@ -1,4 +1,6 @@
 import { getLevelNpcs } from '../data/levels.js';
+import { createBouncePads } from './bouncePads.js';
+import { createGravityFields } from './gravityFields.js';
 
 export function loadLevel(scene, level) {
   const { width, height } = level.world;
@@ -72,6 +74,9 @@ export function loadLevel(scene, level) {
     hazard.refreshBody();
   });
 
+  const gravityFields = createGravityFields(scene, level.gravityFields ?? []);
+  const bouncePads = createBouncePads(scene, level.bouncePads ?? []);
+
   let portal = null;
   if (level.exit) {
     const portalSprite = scene.physics.add.staticSprite(level.exit.x, level.exit.y, 'portal');
@@ -129,6 +134,8 @@ export function loadLevel(scene, level) {
     ingredients,
     checkpoints,
     hazards,
+    gravityFields,
+    bouncePads,
     portal,
     npcs: {
       group: npcGroup,

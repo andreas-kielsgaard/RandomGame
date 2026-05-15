@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { getLevelById, getNextLevel, levels } from '../data/levels.js';
+import { applyBouncePad } from '../game/bouncePads.js';
 import { createDialogueSystem } from '../game/dialogue.js';
+import { updateGravityFields } from '../game/gravityFields.js';
 import { loadLevel } from '../game/levelLoader.js';
 import { createPlayer, resetPlayerController, updatePlayerController } from '../game/player.js';
 import {
@@ -66,6 +68,13 @@ export default class GameScene extends Phaser.Scene {
       null,
       this,
     );
+    this.physics.add.overlap(
+      this.playerController.sprite,
+      this.levelObjects.bouncePads,
+      this.hitBouncePad,
+      null,
+      this,
+    );
     if (this.levelObjects.portal) {
       this.physics.add.overlap(
         this.playerController.sprite,
@@ -108,6 +117,8 @@ export default class GameScene extends Phaser.Scene {
       this.playerController.sprite.setAccelerationX(0);
       return;
     }
+
+    updateGravityFields(this, this.playerController, this.levelObjects.gravityFields);
 
     const playerEvents = updatePlayerController(this, this.playerController, delta);
     if (playerEvents.jumped) {
@@ -224,6 +235,15 @@ export default class GameScene extends Phaser.Scene {
   hitHazard(playerSprite, hazard) {
     const hazardName = hazard.getData('name') ?? 'hazard';
     this.respawnPlayer(`${hazardName} scrambled your atoms. Respawning at the last checkpoint.`);
+  }
+
+  hitBouncePad(playerSprite, pad) {
+    if (!applyBouncePad(this, playerSprite, pad)) {
+      return;
+    }
+
+    this.spawnPlayerBurst(pad.x, pad.y - 12, 0xffe66d, 10);
+    this.showWorldPop(pad.x, pad.y - 36, 'Appeal launched!', '#ffe66d');
   }
 
   tryExitLevel() {
